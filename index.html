@@ -15,13 +15,14 @@
     body {
       background-color: #f0f2f5;
       color: #050505;
+      width: 100vw;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
-    /* 手機頂部 Facebook 導航欄 */
+    /* 手機頂部 Facebook 導航欄 (全寬) */
     .fb-header {
       background-color: #ffffff;
       padding: 12px 16px;
@@ -29,6 +30,8 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
       z-index: 10;
     }
 
@@ -38,18 +41,18 @@
       color: #1877f2;
     }
 
-    /* 手機主內容滾動區 */
-    .phone-body {
+    /* 頁面主體內容 */
+    .page-body {
       flex: 1;
-      overflow-y: auto;
-      position: relative;
-      padding-bottom: 120px; /* 預留底部 Keyboard Plugin 空間 */
+      width: 100%;
+      padding-bottom: 140px; /* 預留底部 Keyboard Plugin 空間 */
     }
 
     .fb-post {
       background-color: #ffffff;
       margin-top: 8px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      width: 100%;
     }
 
     .post-header {
@@ -93,7 +96,7 @@
       line-height: 1.6;
       font-weight: 400;
       user-select: text;
-      -webkit-user-select: text; /* 確保 iOS 支援選取 */
+      -webkit-user-select: text;
     }
 
     .ai-highlight-text {
@@ -106,7 +109,7 @@
 
     .post-image-container {
       width: 100%;
-      height: 220px;
+      height: 240px;
       background-color: #000;
     }
 
@@ -143,7 +146,7 @@
 
     .action-item:active { background-color: #f0f2f5; }
 
-    /* 模擬 Google Keyboard (Gboard) AI 插件欄 (Grammarly 風格) */
+    /* 模擬 Google Keyboard (Gboard) AI 偵測插件欄 */
     .keyboard-plugin-bar {
       position: fixed;
       bottom: 0;
@@ -220,125 +223,4 @@
     .ball-core {
       width: 20px;
       height: 20px;
-      background-color: #007aff;
-      border-radius: 50%;
-    }
-
-    /* 圓點選單 */
-    .menu-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: rgba(0,0,0,0.4);
-      z-index: 110;
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
-    .menu-overlay.active { display: flex; }
-    .circular-menu { position: relative; width: 220px; height: 220px; }
-    .mascot-center {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 65px; height: 65px; background-color: #ffeb3b; border-radius: 50%;
-      border: 3px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center;
-    }
-    .eyes { display: flex; gap: 8px; margin-bottom: 2px; }
-    .eye { width: 5px; height: 5px; background-color: #333; border-radius: 50%; }
-    .smile { width: 12px; height: 5px; border-bottom: 3px solid #333; border-radius: 0 0 8px 8px; }
-    .action-btn {
-      position: absolute; width: 56px; height: 56px; border-radius: 50%;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; border: 3px solid #fff;
-    }
-    .btn-ai-check { top: 0px; left: 15px; background-color: #ff9800; color: white; font-size: 15px; }
-    .btn-search-google { top: 80px; left: -15px; background-color: #28a745; color: white; font-size: 20px; }
-    .btn-report-fraud { top: 160px; left: 15px; background-color: #dc3545; color: white; font-size: 20px; }
-    .btn-label { font-size: 10px; margin-top: 1px; }
-
-    /* 分享攔截彈窗 */
-    .share-modal {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: rgba(0,0,0,0.7); z-index: 250; display: none;
-      justify-content: center; align-items: center; padding: 20px;
-    }
-    .share-card {
-      background-color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 320px; text-align: center;
-    }
-    .share-mascot-badge {
-      width: 54px; height: 54px; background-color: #ffeb3b; border-radius: 50%; border: 3px solid #333;
-      display: flex; flex-direction: column; justify-content: center; align-items: center; margin: -45px auto 12px auto;
-    }
-    .share-btns { display: flex; gap: 10px; }
-    .btn-cancel { flex: 1; padding: 12px; background-color: #e4e6eb; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-    .btn-confirm-share { flex: 1; padding: 12px; background-color: #dc3545; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-  </style>
-</head>
-<body>
-
-  <!-- 手機頂部 Facebook 導航 -->
-  <header class="fb-header">
-    <div class="fb-logo">facebook</div>
-    <span style="font-size: 20px;">🔍 💬</span>
-  </header>
-
-  <!-- 手機主畫面內容 -->
-  <div class="phone-body">
-    
-    <div class="fb-post">
-      <div class="post-header">
-        <div class="page-avatar">HK</div>
-        <div class="page-info">
-          <h3>港資訊 HK INFO <span>✓</span></h3>
-          <span>3小時前 • 🌍</span>
-        </div>
-      </div>
-
-      <!-- 長篇文章內容 -->
-      <div class="post-text" id="selectable-article">
-        <b>【全港長者重要通告】</b><br>
-        近日天氣轉涼，政府呼籲各位老友記注意身體健康。同時，<span id="ai-sentence" class="ai-highlight-text">「各位老友記注意！政府今日起派發全港長者 $5,000 元醫療生活津貼，名額有限，請立即按以下連結登記領取！」</span>根據衞生署資料，長者平日應多做運動及均衡飲食。如對醫療福利有任何疑問，請向官方社會福利署查詢。
-      </div>
-
-      <div class="post-image-container">
-        <img src="醫療券.jpeg" alt="醫療券" onerror="this.src='https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60';">
-      </div>
-
-      <div class="post-stats">
-        <span>👍 💖 512</span>
-        <span>88 則留言 • 230 次分享</span>
-      </div>
-
-      <div class="post-actions">
-        <div class="action-item">👍 讚好</div>
-        <div class="action-item">💬 評論</div>
-        <div class="action-item" onclick="triggerShareCheck(event)">🔄 分享</div>
-      </div>
-    </div>
-
-    <!-- 右側懸浮小圓點 -->
-    <div class="floating-ball" onclick="openMenu(event)">
-      <div class="ball-core"></div>
-    </div>
-  </div>
-
-  <!-- 模擬 Google Keyboard (Gboard) AI 偵測插件欄 -->
-  <div class="keyboard-plugin-bar" id="keyboardPlugin">
-    <div class="plugin-header">
-      <span>🤖 Gboard AI 智能偵測插件</span>
-      <span style="cursor:pointer; font-weight:bold; padding: 0 8px;" onclick="closePlugin()">✕</span>
-    </div>
-    <div class="plugin-body" id="pluginMessage">
-      正在檢測選取文字...
-    </div>
-    <div class="keyboard-mock-bg">
-      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
-    </div>
-  </div>
-
-  <!-- 圓點選單 -->
-  <div class="menu-overlay" id="menuOverlay" onclick="closeMenu(event)">
-    <div class="circular-menu">
-      <div class="mascot-center">
-        <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
-        <div class="smile"></div>
-      </div>
-      <div class="action-btn btn-ai-check" onclick="checkAIContent(event)"><span>AI?</span><span class="btn-label
+      background-color:
