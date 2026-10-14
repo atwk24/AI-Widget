@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>長者 AI 守護助手 - Keyboard Plugin 模擬器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: #1e1e1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 手機模擬器外框 */
+    .phone-simulator {
+      width: 375px;
+      height: 720px;
+      background-color: #f0f2f5;
+      border-radius: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      position: relative;
+      overflow: hidden;
+      border: 12px solid #333;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-notch {
+      width: 120px;
+      height: 20px;
+      background-color: #333;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 50;
+    }
+
+    .fb-header {
+      background-color: #ffffff;
+      padding: 24px 16px 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      z-index: 10;
+    }
+
+    .fb-logo {
+      font-size: 22px;
+      font-weight: bold;
+      color: #1877f2;
+    }
+
+    .phone-body {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+      padding-bottom: 80px; /* 預留底部鍵盤空間 */
+    }
+
+    .fb-post {
+      background-color: #ffffff;
+      margin-top: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+    }
+
+    .page-avatar {
+      width: 40px;
+      height: 40px;
+      background-color: #005a9c;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    .page-info h3 {
+      font-size: 15px;
+      color: #050505;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-info span {
+      font-size: 12px;
+      color: #65676b;
+    }
+
+    /* 長篇文章內容 (支援選取) */
+    .post-text {
+      padding: 0 16px 12px 16px;
+      font-size: 17px;
+      color: #050505;
+      line-height: 1.6;
+      font-weight: 400;
+      user-select: text; /* 允許用戶選取文字 */
+    }
+
+    .post-image-container {
+      width: 100%;
+      height: 200px;
+      background-color: #000;
+    }
+
+    .post-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .post-stats {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #65676b;
+      border-bottom: 1px solid #e4e6eb;
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 4px 0;
+    }
+
+    .action-item {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #65676b;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-item:active { background-color: #f0f2f5; }
+
+    /* 模擬 Google Keyboard (Gboard) 頂部 AI 插件欄 */
+    .keyboard-plugin-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #f7f9fa;
+      border-top: 1px solid #ccc;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none; /* 預設隱藏，當 highlight 時彈出 */
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .plugin-header {
+      background-color: #1a73e8;
+      color: white;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .plugin-body {
+      padding: 12px 16px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .ai-highlight-text {
+      background-color: #ffd7d9;
+      color: #d9381e;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    /* 模擬鍵盤按鍵底座背景 */
+    .keyboard-mock-bg {
+      background-color: #cfd8dc;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+
+    .key {
+      background: #fff;
+      padding: 8px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    }
+
+    /* 右側懸浮小圓點 */
+    .floating-ball {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      border: 2px solid #007aff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 120;
+    }
+
+    .ball-core {
+      width: 18px;
+      height: 18px;
+      background-color: #007aff;
+      border-radius: 50%;
+    }
+
+    /* 圓點環形選單 */
+    .menu-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      z-index: 110;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .menu-overlay.active { display: flex; }
+    .circular-menu { position: relative; width: 200px; height: 200px; }
+    .mascot-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 60px; height: 60px; background-color: #ffeb3b; border-radius: 50%;
+      border: 3px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    }
+    .eyes { display: flex; gap: 8px; margin-bottom: 2px; }
+    .eye { width: 5px; height: 5px; background-color: #333; border-radius: 50%; }
+    .smile { width: 12px; height: 5px; border-bottom: 3px solid #333; border-radius: 0 0 8px 8px; }
+    .action-btn {
+      position: absolute; width: 52px; height: 52px; border-radius: 50%;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; border: 3px solid #fff;
+    }
+    .btn-ai-check { top: 0px; left: 15px; background-color: #ff9800; color: white; font-size: 15px; }
+    .btn-search-google { top: 74px; left: -15px; background-color: #28a745; color: white; font-size: 20px; }
+    .btn-report-fraud { top: 148px; left: 15px; background-color: #dc3545; color: white; font-size: 20px; }
+    .btn-label { font-size: 9px; margin-top: 1px; }
+
+    /* 分享攔截彈窗 */
+    .share-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.7); z-index: 250; display: none;
+      justify-content: center; align-items: center; padding: 16px;
+    }
+    .share-card {
+      background-color: #fff; border-radius: 24px; padding: 22px; width: 100%; max-width: 310px; text-align: center;
+    }
+    .share-mascot-badge {
+      width: 54px; height: 54px; background-color: #ffeb3b; border-radius: 50%; border: 3px solid #333;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; margin: -45px auto 12px auto;
+    }
+    .share-btns { display: flex; gap: 10px; }
+    .btn-cancel { flex: 1; padding: 12px; background-color: #e4e6eb; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+    .btn-confirm-share { flex: 1; padding: 12px; background-color: #dc3545; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="phone-simulator">
+    <div class="phone-notch"></div>
+
+    <header class="fb-header">
+      <div class="fb-logo">facebook</div>
+      <span style="font-size: 20px;">🔍 💬</span>
+    </header>
+
+    <div class="phone-body" id="phoneBody">
+      
+      <!-- Facebook 帖子 (長篇文章，參雜真假) -->
+      <div class="fb-post">
+        <div class="post-header">
+          <div class="page-avatar">HK</div>
+          <div class="page-info">
+            <h3>港資訊 HK INFO <span>✓</span></h3>
+            <span>3小時前 • 🌍</span>
+          </div>
+        </div>
+
+        <!-- 長篇文章內容 -->
+        <div class="post-text" id="selectable-article">
+          <b>【全港長者重要通告】</b><br>
+          近日天氣轉涼，政府呼籲各位老友記注意身體健康。同時，<span id="ai-sentence">「各位老友記注意！政府今日起派發全港長者 $5,000 元醫療生活津貼，名額有限，請立即按以下連結登記領取！」</span>根據衞生署資料，長者平日應多做運動及均衡飲食。如對醫療福利有任何疑問，請向官方社會福利署查詢。
+        </div>
+
+        <div class="post-image-container">
+          <img src="醫療券.jpeg" alt="醫療券" onerror="this.src='https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60';">
+        </div>
+
+        <div class="post-stats">
+          <span>👍 💖 512</span>
+          <span>88 則留言 • 230 次分享</span>
+        </div>
+
+        <div class="post-actions">
+          <div class="action-item">👍 讚好</div>
+          <div class="action-item">💬 評論</div>
+          <div class="action-item" onclick="triggerShareCheck(event)">🔄 分享</div>
+        </div>
+      </div>
+
+      <!-- 右側懸浮小圓點 -->
+      <div class="floating-ball" onclick="openMenu(event)">
+        <div class="ball-core"></div>
+      </div>
+    </div>
+
+    <!-- 模擬 Google Keyboard (Gboard) AI 偵測插件欄 (當 Highlight 時彈出) -->
+    <div class="keyboard-plugin-bar" id="keyboardPlugin">
+      <div class="plugin-header">
+        <span>🤖 Gboard AI 智能偵測插件 (Grammarly 模式)</span>
+        <span style="cursor:pointer; font-weight:bold;" onclick="closePlugin()">✕</span>
+      </div>
+      <div class="plugin-body" id="pluginMessage">
+        正在檢測選取文字...
+      </div>
+      <div class="keyboard-mock-bg">
+        <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
+      </div>
+    </div>
+
+    <!-- 圓點選單 -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu(event)">
+      <div class="circular-menu">
+        <div class="mascot-center">
+          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+          <div class="smile"></div>
+        </div>
+        <div class="action-btn btn-ai-check" onclick="checkAIContent(event)"><span>AI?</span><span class="btn-label">辨別</span></div>
+        <div class="action-btn btn-search-google" onclick="searchWithGoogle(event)"><span>🔍</span><span class="btn-label">搜尋</span></div>
+        <div class="action-btn btn-report-fraud" onclick="reportContent(event)"><span>🚨</span><span class="btn-label">舉報</span></div>
+      </div>
+    </div>
+
+    <!-- 分享攔截彈窗 -->
+    <div class="share-modal" id="shareModal">
+      <div class="share-card">
+        <div class="share-mascot-badge">
+          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+          <div class="smile"></div>
+        </div>
+        <div style="font-size: 20px; font-weight: bold; color: #d9381e; margin-bottom: 8px;">🛑 等一等！這是 AI 內容</div>
+        <div style="font-size: 15px; color: #333; line-height: 1.5; margin-bottom: 20px;">
+          助手檢測到這是一則<b>冒充政府派錢的 AI 虛假貼文</b>。<br><br>您確定要將這則有風險的內容分享給朋友嗎？
+        </div>
+        <div class="share-btns">
+          <button class="btn-cancel" onclick="cancelShare()">取消分享</button>
+          <button class="btn-confirm-share" onclick="confirmShare()">堅持分享</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 懸浮小白點邏輯
+    function openMenu(event) { event.stopPropagation(); document.getElementById('menuOverlay').classList.add('active'); }
+    function closeMenu(event) { if (event.target.id === 'menuOverlay') document.getElementById('menuOverlay').classList.remove('active'); }
+    function checkAIContent(event) {
+      event.stopPropagation();
+      document.getElementById('menuOverlay').classList.remove('active');
+      alert('⚠️ 助手檢測：整篇長文中包含 AI 生成的虛假派錢詐騙標題！');
+    }
+    function searchWithGoogle(event) {
+      event.stopPropagation();
+      document.getElementById('menuOverlay').classList.remove('active');
+      window.open('https://www.google.com/search?q=政府派發長者5000元醫療生活津貼', '_blank');
+    }
+    function reportContent(event) {
+      event.stopPropagation();
+      document.getElementById('menuOverlay').classList.remove('active');
+      alert('🛡️ 舉報成功！感謝您協助維護網絡安全。');
+    }
+
+    // 分享攔截功能
+    function triggerShareCheck(event) { event.stopPropagation(); document.getElementById('shareModal').style.display = 'flex'; }
+    function cancelShare() { document.getElementById('shareModal').style.display = 'none'; }
+    function confirmShare() { document.getElementById('shareModal').style.display = 'none'; alert('已完成分享。'); }
+
+    // 【新增】Keyboard Plugin 核心邏輯：當用戶選取 (Highlight) 文章文字時觸發
+    document.getElementById('selectable-article').addEventListener('mouseup', function() {
+      const selectedText = window.getSelection().toString().trim();
+      const pluginBar = document.getElementById('keyboardPlugin');
+      const pluginMsg = document.getElementById('pluginMessage');
+
+      if (selectedText.length > 3) {
+        // 檢查選取的文字是否包含 AI 詐騙句子
+        if (selectedText.includes("5,000 元醫療生活津貼") || selectedText.includes("各位老友記注意")) {
+          pluginMsg.innerHTML = `⚠️ <b>偵測到 AI 內容：</b><br>您選取的句子中有部分被標記為 <span class="ai-highlight-text">AI 虛假資訊</span>（冒充政府津貼），請小心查證！`;
+        } else {
+          pluginMsg.innerHTML = `✅ <b>檢測完成：</b><br>您選取的文字（「${selectedText.substring(0, 15)}...」）經檢測為正常資訊。`;
+        }
+        pluginBar.style.display = 'block';
+      }
+    });
+
+    // 關閉鍵盤插件欄
+    function closePlugin() {
+      document.getElementById('keyboardPlugin').style.display = 'none';
+      window.getSelection().removeAllRanges();
+    }
+  </script>
+
+</body>
+</html>
