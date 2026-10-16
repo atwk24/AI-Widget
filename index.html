@@ -3,354 +3,680 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>長者 AI 守護助手 - 手機網頁版</title>
+  <title>長者 AI 守護全流程模擬器</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
     }
 
     body {
-      background-color: #f0f2f5;
-      color: #050505;
-      width: 100%;
-      min-height: 100vh;
+      background-color: #F4F6F9;
+      color: #222222;
       display: flex;
       flex-direction: column;
+      width: 100vw;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .screen-page {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow-y: auto;
+      background-color: #F4F6F9;
+      padding-bottom: 70px;
+    }
+    .screen-page.active { display: flex; }
+
+    .home-grid {
+      padding: 30px 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      justify-items: center;
+    }
+
+    .app-icon-card {
+      background: #ffffff;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 160px;
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      cursor: pointer;
+      border: 2px solid #E0E0E0;
+    }
+    .app-icon-card:active { transform: scale(0.95); }
+
+    .app-icon-img {
+      width: 60px; height: 60px; border-radius: 16px;
+      display: flex; justify-content: center; align-items: center; font-size: 28px; margin-bottom: 8px; color: #fff;
+    }
+    .app-label { font-size: 18px; font-weight: bold; color: #333; }
+
+    .samsung-navbar {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
+      background-color: #222; display: flex; justify-content: space-around; align-items: center; z-index: 4000;
+    }
+    .nav-btn { color: #aaa; font-size: 20px; cursor: pointer; background: none; border: none; padding: 10px 20px; }
+    .nav-btn:active { color: #fff; }
+
+    .tutorial-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85); z-index: 3500; display: none;
+      flex-direction: column; justify-content: center; align-items: center; padding: 24px; color: #fff; text-align: center;
+    }
+    .tutorial-box {
+      background: #fff; color: #222; padding: 24px; border-radius: 24px; width: 100%; max-width: 320px;
+    }
+    .tutorial-box h3 { color: #005A9C; font-size: 22px; margin-bottom: 12px; }
+    .tutorial-box p { font-size: 16px; line-height: 1.5; margin-bottom: 20px; color: #444; }
+
+    .ai-app-body { padding: 16px; font-size: 18px; }
+    .top-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
+    .user-profile-btn {
+      background: #ffffff; border: 2px solid #005A9C; border-radius: 30px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    }
+    .user-avatar-small {
+      width: 28px; height: 28px; border-radius: 50%; background-color: #005A9C; color: white;
+      display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px; overflow: hidden;
+    }
+    header.ai-header {
+      text-align: center; padding: 16px 10px; background-color: #005A9C; color: #FFFFFF; border-radius: 16px; margin-bottom: 16px;
+    }
+    header.ai-header h1 { font-size: 22px; }
+    header.ai-header p { font-size: 15px; opacity: 0.9; }
+
+    .card {
+      background-color: #FFFFFF; border: 2px solid #E0E0E0; border-radius: 16px; padding: 18px 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .card-title { font-size: 20px; font-weight: bold; color: #005A9C; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .card-desc { font-size: 16px; color: #555; margin-bottom: 14px; }
+    .btn {
+      display: block; width: 100%; padding: 14px; font-size: 18px; font-weight: bold;
+      text-align: center; color: #FFFFFF; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; margin-top: 10px;
+    }
+    .btn-primary { background-color: #00805A; }
+    .btn-game { background-color: #D9381E; }
+    .btn-secondary { background-color: #005A9C; }
+
+    #report-result {
+      display: none; background-color: #EBF3FA; border: 2px dashed #005A9C; border-radius: 12px; padding: 16px; margin-top: 12px;
+    }
+    .report-item { font-size: 16px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .report-number { font-weight: bold; color: #D9381E; }
+
+    .leaderboard-box {
+      background: #fff; border-radius: 16px; padding: 16px; margin-top: 12px; border: 2px solid #ff9800; display: none;
+    }
+    .rank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 15px; }
+
+    .game-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #F4F6F9; z-index: 2000; flex-direction: column; padding: 16px;
+    }
+    .game-header {
+      display: flex; justify-content: space-between; align-items: center; background: #fff;
+      padding: 10px 14px; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .game-screen {
+      flex: 1; background: #fff; border-radius: 16px; padding: 16px; display: flex; flex-direction: column;
+      position: relative; overflow-y: auto; max-height: calc(100vh - 120px);
+    }
+    .video-container {
+      width: 100%; height: 220px; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 10px; flex-shrink: 0;
+    }
+    .video-container video { width: 100%; height: 100%; object-fit: contain; }
+    .game-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; flex-shrink: 0; }
+    .opt-btn { padding: 14px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; color: #fff; cursor: pointer; }
+    .btn-ai-choice { background-color: #D9381E; }
+    .btn-real-choice { background-color: #00805A; }
+
+    .popup-msg {
+      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0);
+      font-size: 36px; font-weight: bold; transition: transform 0.3s; z-index: 50;
+      background: rgba(255,255,255,0.95); padding: 10px 20px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .popup-msg.show { transform: translate(-50%, -50%) scale(1); }
+
+    .countdown-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,90,156,0.95); color: #fff; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 2500;
     }
 
     .fb-header {
-      background-color: #ffffff;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ddd;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      background-color: #ffffff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10;
     }
-
-    .fb-logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: #1877f2;
-    }
-
-    .page-body {
-      flex: 1;
-      width: 100%;
-      padding-bottom: 140px;
-    }
-
-    .fb-post {
-      background-color: #ffffff;
-      margin-top: 8px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      width: 100%;
-    }
-
-    .post-header {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-    }
-
-    .page-avatar {
-      width: 40px;
-      height: 40px;
-      background-color: #005a9c;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 16px;
-      margin-right: 10px;
-    }
-
-    .page-info h3 {
-      font-size: 15px;
-      color: #050505;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .page-info span {
-      font-size: 12px;
-      color: #65676b;
-    }
-
-    .post-text {
-      padding: 0 16px 12px 16px;
-      font-size: 18px;
-      color: #050505;
-      line-height: 1.6;
-      font-weight: 400;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    .ai-highlight-text {
-      background-color: #ffd7d9;
-      color: #d9381e;
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-
-    .post-image-container {
-      width: 100%;
-      height: 240px;
-      background-color: #e4e6eb;
-    }
-
-    .post-image-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .post-stats {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 16px;
-      font-size: 13px;
-      color: #65676b;
-      border-bottom: 1px solid #e4e6eb;
-    }
-
-    .post-actions {
-      display: flex;
-      justify-content: space-around;
-      padding: 4px 0;
-    }
-
-    .action-item {
-      flex: 1;
-      text-align: center;
-      padding: 10px 0;
-      font-size: 15px;
-      color: #65676b;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .action-item:active { background-color: #f0f2f5; }
+    .fb-logo { font-size: 22px; font-weight: bold; color: #1877f2; }
+    .fb-post { background-color: #ffffff; margin-top: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); width: 100%; }
+    .post-header { display: flex; align-items: center; padding: 12px 16px; }
+    .page-avatar { width: 36px; height: 36px; background-color: #005a9c; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 10px; }
+    .post-text { padding: 0 16px 12px 16px; font-size: 16px; line-height: 1.6; user-select: text; -webkit-user-select: text; }
+    .ai-highlight-text { background-color: #ffd7d9; color: #d9381e; padding: 2px 4px; border-radius: 4px; font-weight: bold; }
+    .post-image-container img { width: 100%; height: 200px; object-fit: cover; }
+    .post-stats { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 12px; color: #65676b; border-bottom: 1px solid #e4e6eb; }
+    .post-actions { display: flex; justify-content: space-around; padding: 4px 0; font-size: 14px; font-weight: 600; color: #65676b; cursor: pointer; }
 
     .keyboard-plugin-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: #f7f9fa;
-      border-top: 1px solid #ccc;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-      z-index: 150;
-      display: none;
+      position: fixed; bottom: 50px; left: 0; width: 100%; background-color: #f7f9fa; border-top: 1px solid #ccc; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 150; display: none;
     }
+    .plugin-header { background-color: #1a73e8; color: white; padding: 8px 14px; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; }
+    .plugin-body { padding: 12px 14px; font-size: 15px; color: #333; }
+    .keyboard-mock-bg { background-color: #cfd8dc; padding: 8px; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; text-align: center; }
+    .key { background: #fff; padding: 6px 0; border-radius: 4px; font-size: 12px; font-weight: bold; }
 
-    .plugin-header {
-      background-color: #1a73e8;
-      color: white;
-      padding: 10px 16px;
-      font-size: 15px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .plugin-body {
-      padding: 14px 16px;
-      font-size: 16px;
-      color: #333;
-      line-height: 1.5;
-    }
-
-    .keyboard-mock-bg {
-      background-color: #cfd8dc;
-      padding: 10px 6px;
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 5px;
-      text-align: center;
-    }
-
-    .key {
-      background: #fff;
-      padding: 10px 0;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: bold;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-    }
-
+    /* 浮動小圓點：預設藍色，觸發分享後變為紅色 */
     .floating-ball {
-      position: fixed;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 52px;
-      height: 52px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 50%;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      border: 2px solid #007aff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 120;
+      position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+      width: 48px; height: 48px; background: rgba(255, 255, 255, 0.95); border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #007aff; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 120;
+      transition: border-color 0.3s;
+    }
+    .ball-core { width: 18px; height: 18px; background-color: #007aff; border-radius: 50%; transition: background-color 0.3s; }
+    
+    .floating-ball.alert-red { border-color: #dc3545; animation: pulseRed 1s infinite; }
+    .floating-ball.alert-red .ball-core { background-color: #dc3545; }
+
+    @keyframes pulseRed {
+      0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
     }
 
-    .ball-core {
-      width: 20px;
-      height: 20px;
-      background-color: #007aff;
-      border-radius: 50%;
+    /* AI 橫幅通知樣式 */
+    .ai-banner-notification {
+      position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 90%; max-width: 360px; background-color: #1a73e8; color: white;
+      padding: 12px 16px; border-radius: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      z-index: 3000; display: flex; align-items: center; gap: 12px;
+      transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .ai-banner-notification.show { top: 16px; }
 
     .menu-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: rgba(0,0,0,0.4);
-      z-index: 110;
-      display: none;
-      justify-content: center;
-      align-items: center;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.4); z-index: 110; display: none; justify-content: center; align-items: center;
     }
     .menu-overlay.active { display: flex; }
-    .circular-menu { position: relative; width: 220px; height: 220px; }
+    .circular-menu { position: relative; width: 200px; height: 200px; }
     .mascot-center {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 65px; height: 65px; background-color: #ffeb3b; border-radius: 50%;
-      border: 3px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      width: 60px; height: 60px; background-color: #ffeb3b; border-radius: 50%; border: 3px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center;
     }
-    .eyes { display: flex; gap: 8px; margin-bottom: 2px; }
-    .eye { width: 5px; height: 5px; background-color: #333; border-radius: 50%; }
-    .smile { width: 12px; height: 5px; border-bottom: 3px solid #333; border-radius: 0 0 8px 8px; }
+    .eyes { display: flex; gap: 6px; margin-bottom: 2px; }
+    .eye { width: 4px; height: 4px; background-color: #333; border-radius: 50%; }
+    .smile { width: 10px; height: 4px; border-bottom: 2px solid #333; border-radius: 0 0 6px 6px; }
     .action-btn {
-      position: absolute; width: 56px; height: 56px; border-radius: 50%;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; border: 3px solid #fff;
+      position: absolute; width: 50px; height: 50px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; border: 2px solid #fff; font-size: 13px;
     }
-    .btn-ai-check { top: 0px; left: 15px; background-color: #ff9800; color: white; font-size: 15px; }
-    .btn-search-google { top: 80px; left: -15px; background-color: #28a745; color: white; font-size: 20px; }
-    .btn-report-fraud { top: 160px; left: 15px; background-color: #dc3545; color: white; font-size: 20px; }
-    .btn-label { font-size: 10px; margin-top: 1px; }
+    .btn-ai-check { top: 0px; left: 15px; background-color: #ff9800; color: white; }
+    .btn-search-google { top: 74px; left: -15px; background-color: #28a745; color: white; }
+    .btn-report-fraud { top: 148px; left: 15px; background-color: #dc3545; color: white; }
+    .btn-label { font-size: 9px; margin-top: 1px; }
 
     .share-modal {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: rgba(0,0,0,0.7); z-index: 250; display: none;
-      justify-content: center; align-items: center; padding: 20px;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 250; display: none; justify-content: center; align-items: center; padding: 20px;
     }
-    .share-card {
-      background-color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 320px; text-align: center;
-    }
-    .share-mascot-badge {
-      width: 54px; height: 54px; background-color: #ffeb3b; border-radius: 50%; border: 3px solid #333;
-      display: flex; flex-direction: column; justify-content: center; align-items: center; margin: -45px auto 12px auto;
-    }
-    .share-btns { display: flex; gap: 10px; }
-    .btn-cancel { flex: 1; padding: 12px; background-color: #e4e6eb; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-    .btn-confirm-share { flex: 1; padding: 12px; background-color: #dc3545; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+    .share-card { background-color: #fff; border-radius: 20px; padding: 20px; width: 100%; max-width: 300px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <header class="fb-header">
-    <div class="fb-logo">facebook</div>
-    <span style="font-size: 20px;">🔍 💬</span>
-  </header>
+  <!-- PAGE 1: 主畫面六大圖標 -->
+  <div class="screen-page active" id="pageHome">
+    <div style="background: #005A9C; color: #fff; padding: 30px 20px 20px 20px; text-align: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+      <h2 style="font-size: 24px;">📱 長者專用手機桌面</h2>
+      <p style="font-size: 15px; opacity: 0.9; margin-top: 6px;">點擊下方圖標開始使用</p>
+    </div>
 
-  <main class="page-body">
-    <div class="fb-post">
-      <div class="post-header">
-        <div class="page-avatar">HK</div>
-        <div class="page-info">
-          <h3>港資訊 HK INFO <span>✓</span></h3>
-          <span>3小時前 • 🌍</span>
+    <div class="home-grid">
+      <div class="app-icon-card" onclick="alert('【通話】功能：模擬通話中...')">
+        <div class="app-icon-img" style="background-color: #34c759;">📞</div>
+        <div class="app-label">通話</div>
+      </div>
+      <div class="app-icon-card" onclick="alert('【相機】功能：相機預覽模擬')">
+        <div class="app-icon-img" style="background-color: #8e8e93;">📷</div>
+        <div class="app-label">相機</div>
+      </div>
+      <div class="app-icon-card" onclick="alert('【訊息】功能：查看短訊')">
+        <div class="app-icon-img" style="background-color: #007aff;">💬</div>
+        <div class="app-label">訊息</div>
+      </div>
+      <div class="app-icon-card" onclick="alert('【音樂】功能：播放輕鬆旋律')">
+        <div class="app-icon-img" style="background-color: #ff2d55;">🎵</div>
+        <div class="app-label">音樂</div>
+      </div>
+      <div class="app-icon-card" onclick="alert('【照片】空間：瀏覽相簿')">
+        <div class="app-icon-img" style="background-color: #af52de;">🖼️</div>
+        <div class="app-label">照片</div>
+      </div>
+      <div class="app-icon-card" onclick="openAIApp()" style="border-color: #005A9C; background: #eef6fc;">
+        <div class="app-icon-img" style="background-color: #005A9C;">🤖</div>
+        <div class="app-label" style="color: #005A9C;">AI 助手</div>
+      </div>
+    </div>
+
+    <div style="padding: 0 20px; margin-top: 20px; margin-bottom: 80px;">
+      <button class="btn btn-game" onclick="openFacebookApp()" style="font-size: 18px;">📘 打開 Facebook 瀏覽動態</button>
+    </div>
+  </div>
+
+
+  <!-- PAGE 2: AI 助手 App 介面 -->
+  <div class="screen-page" id="pageAIApp">
+    <div class="ai-app-body">
+      <div class="top-bar">
+        <div class="user-profile-btn" onclick="openProfileModal()">
+          <div class="user-avatar-small" id="headerAvatar">長</div>
+          <span id="headerName" style="font-size: 14px; font-weight: bold; color: #005A9C;">老友記</span>
         </div>
       </div>
 
-      <div class="post-text" id="selectable-article">
-        <b>【全港長者重要通告】</b><br>
-        近日天氣轉涼，政府呼籲各位老友記注意身體健康。同時，<span id="ai-sentence" class="ai-highlight-text">「各位老友記注意！政府今日起派發全港長者 $5,000 元醫療生活津貼，名額有限，請立即按以下連結登記領取！」</span>根據衞生署資料，長者平日應多做運動及均衡飲食。如對醫療福利有任何疑問，請向官方社會福利署查詢。
+      <header class="ai-header">
+        <h1>👵👴 智防 AI 小助手</h1>
+        <p>陪您一起看清真假，安心上網</p>
+      </header>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📊</span>
+          <span>功能一：每月 AI 報告</span>
+        </div>
+        <p class="card-desc">查看本月防護成果，並與過去 1-2 個月進行對比。</p>
+        <button class="btn btn-primary" onclick="generateReport()">📑 生成本月 AI 報告</button>
+
+        <div id="report-result">
+          <h3>📅 2026年10月 防護月報</h3>
+          <div class="report-item"><span>接觸 AI 內容總數：</span><span class="report-number">42 次</span></div>
+          <div class="report-item"><span>無法辨識/疑慮內容：</span><span class="report-number">15 次</span></div>
+          <div class="report-item"><span>辨識成功率：</span><span class="report-number">64%</span></div>
+          
+          <div style="background: #fff; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; color: #333;">
+            📈 <b>與上月對比（9月）：</b><br>
+            • 辨識成功率由 50% 提升至 <b>64%</b>（▲14% 進步）！<br>
+            • 識別防騙意識明顯加強，值得鼓勵！
+          </div>
+          <button class="btn btn-secondary" onclick="alert('✅ 報告已成功自動發送給您的子女（兒子/女兒）查閱！')">📤 轉發報告給子女查閱</button>
+        </div>
       </div>
 
-      <div class="post-image-container">
-        <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60" alt="醫療券">
-      </div>
+      <div class="card" style="border-color: #FFE0B2;">
+        <div class="card-title" style="color: #D9381E;">
+          <span>🏆</span>
+          <span>功能二：AI Test 真假大比拼</span>
+        </div>
+        <p class="card-desc">線上 PK 比賽！挑戰眼力，爭奪長者防騙排行榜名次。</p>
+        <button class="btn btn-game" onclick="startAITest()">🎮 開始 AI PK 對決</button>
+        <button class="btn" style="background-color: #ff9800; margin-top: 8px;" onclick="toggleLeaderboard()">🏆 查看防騙排行榜</button>
 
-      <div class="post-stats">
-        <span>👍 💖 512</span>
-        <span>88 則留言 • 230 次分享</span>
-      </div>
-
-      <div class="post-actions">
-        <div class="action-item">👍 讚好</div>
-        <div class="action-item">💬 評論</div>
-        <div class="action-item" onclick="triggerShareCheck(event)">🔄 分享</div>
-      </div>
-    </div>
-
-    <div class="floating-ball" onclick="openMenu(event)">
-      <div class="ball-core"></div>
-    </div>
-  </main>
-
-  <div class="keyboard-plugin-bar" id="keyboardPlugin">
-    <div class="plugin-header">
-      <span>🤖 Gboard AI 智能偵測插件</span>
-      <span style="cursor:pointer; font-weight:bold; padding: 0 8px;" onclick="closePlugin()">✕</span>
-    </div>
-    <div class="plugin-body" id="pluginMessage">正在檢測選取文字...</div>
-    <div class="keyboard-mock-bg">
-      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
-    </div>
-  </div>
-
-  <div class="menu-overlay" id="menuOverlay" onclick="closeMenu(event)">
-    <div class="circular-menu">
-      <div class="mascot-center">
-        <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
-        <div class="smile"></div>
-      </div>
-      <div class="action-btn btn-ai-check" onclick="checkAIContent(event)"><span>AI?</span><span class="btn-label">辨別</span></div>
-      <div class="action-btn btn-search-google" onclick="searchWithGoogle(event)"><span>🔍</span><span class="btn-label">搜尋</span></div>
-      <div class="action-btn btn-report-fraud" onclick="reportContent(event)"><span>🚨</span><span class="btn-label">舉報</span></div>
-    </div>
-  </div>
-
-  <div class="share-modal" id="shareModal">
-    <div class="share-card">
-      <div class="share-mascot-badge">
-        <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
-        <div class="smile"></div>
-      </div>
-      <div style="font-size: 20px; font-weight: bold; color: #d9381e; margin-bottom: 8px;">🛑 等一等！這是 AI 內容</div>
-      <div style="font-size: 16px; color: #333; line-height: 1.5; margin-bottom: 20px;">
-        助手檢測到這是一則<b>冒充政府派錢的 AI 虛假貼文</b>。<br><br>您確定要將這則有風險的內容分享給朋友嗎？
-      </div>
-      <div class="share-btns">
-        <button class="btn-cancel" onclick="cancelShare()">取消分享</button>
-        <button class="btn-confirm-share" onclick="confirmShare()">堅持分享</button>
+        <div class="leaderboard-box" id="leaderboardBox">
+          <h4 style="color: #D9381E; margin-bottom: 8px; font-size: 16px;">🥇 長者防騙智慧排行榜</h4>
+          <div class="rank-row"><span>1. 陳伯伯 (準確率 95%)</span><span>🏆 120分</span></div>
+          <div class="rank-row"><span>2. 何婆婆 (準確率 90%)</span><span>🥈 105分</span></div>
+          <div class="rank-row" style="background: #fff8e1; font-weight: bold;"><span>3. <span id="rankUserName">老友記</span> (您)</span><span>🥉 85分</span></div>
+          <div class="rank-row"><span>4. 張叔叔 (準確率 75%)</span><span>⭐ 70分</span></div>
+        </div>
       </div>
     </div>
   </div>
+
+
+  <!-- PAGE 3: Facebook 模擬社交 App -->
+  <div class="screen-page" id="pageFacebook">
+    <header class="fb-header">
+      <div class="fb-logo">facebook</div>
+      <span style="font-size: 18px;">🔍 💬</span>
+    </header>
+
+    <div style="flex: 1; overflow-y: auto; padding-bottom: 80px;">
+      <div class="fb-post">
+        <div class="post-header">
+          <div class="page-avatar">HK</div>
+          <div>
+            <h3 style="font-size: 14px;">港資訊 HK INFO <span style="color: #1877f2;">✓</span></h3>
+            <span style="font-size: 11px; color: #65676b;">3小時前 • 🌍</span>
+          </div>
+        </div>
+
+        <div class="post-text" id="selectable-article">
+          <b>【全港長者重要通告】</b><br>
+          近日天氣轉涼，政府呼籲各位老友記注意身體健康。同時，<span id="ai-sentence" class="ai-highlight-text">「各位老友記注意！政府今日起派發全港長者 $5,000 元醫療生活津貼，名額有限，請立即按以下連結登記領取！」</span>根據衞生署資料，長者平日應多做運動及均衡飲食。
+        </div>
+
+        <div class="post-image-container">
+          <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60" alt="醫療券">
+        </div>
+
+        <div class="post-stats">
+          <span>👍 💖 512</span>
+          <span>88 則留言 • 230 次分享</span>
+        </div>
+
+        <div class="post-actions">
+          <div class="action-item" style="text-align: center; flex:1;">👍 讚好</div>
+          <div class="action-item" style="text-align: center; flex:1;">💬 評論</div>
+          <div class="action-item" style="text-align: center; flex:1;" onclick="triggerShareCheck(event)">🔄 分享</div>
+        </div>
+      </div>
+
+      <!-- 懸浮小圓點 -->
+      <div class="floating-ball" id="floatingBall" onclick="openMenu(event)">
+        <div class="ball-core"></div>
+      </div>
+    </div>
+
+    <!-- AI 橫幅通知 (預設收起) -->
+    <div class="ai-banner-notification" id="aiBannerNotification">
+      <div style="font-size: 24px;">🤖</div>
+      <div style="flex: 1; font-size: 14px; line-height: 1.4;">
+        <b>【AI 助手通知】</b><br>偵測到您嘗試分享可疑內容，新的 AI 防騙報告已生成！
+      </div>
+      <span style="cursor: pointer; font-size: 18px; font-weight: bold;" onclick="closeAiBanner()">✕</span>
+    </div>
+
+    <div class="keyboard-plugin-bar" id="keyboardPlugin">
+      <div class="plugin-header">
+        <span>🤖 Gboard AI 智能偵測插件</span>
+        <span style="cursor:pointer; font-weight:bold;" onclick="closePlugin()">✕</span>
+      </div>
+      <div class="plugin-body" id="pluginMessage">正在檢測選取文字...</div>
+      <div class="keyboard-mock-bg">
+        <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
+      </div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu(event)">
+      <div class="circular-menu">
+        <div class="mascot-center">
+          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+          <div class="smile"></div>
+        </div>
+        <div class="action-btn btn-ai-check" onclick="checkAIContent(event)"><span>AI?</span><span class="btn-label">辨別</span></div>
+        <div class="action-btn btn-search-google" onclick="searchWithGoogle(event)"><span>🔍</span><span class="btn-label">搜尋</span></div>
+        <div class="action-btn btn-report-fraud" onclick="reportContent(event)"><span>🚨</span><span class="btn-label">舉報</span></div>
+      </div>
+    </div>
+
+    <div class="share-modal" id="shareModal">
+      <div class="share-card">
+        <div style="font-size: 24px; margin-bottom: 8px;">🛑</div>
+        <div style="font-size: 18px; font-weight: bold; color: #d9381e; margin-bottom: 8px;">等一等！這是 AI 內容</div>
+        <div style="font-size: 14px; color: #333; line-height: 1.5; margin-bottom: 16px;">
+          助手檢測到這是一則<b>冒充政府派錢的 AI 虛假貼文</b>。您確定要將有風險的內容分享給朋友嗎？
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" style="background:#e4e6eb; color:#333; padding:10px; font-size:14px;" onclick="cancelShare()">取消分享</button>
+          <button class="btn" style="background:#dc3545; color:#fff; padding:10px; font-size:14px;" onclick="confirmShare()">堅持分享</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 新手教學引導 -->
+  <div class="tutorial-overlay" id="tutorialOverlay">
+    <div class="tutorial-box">
+      <h3 id="tutTitle">👋 歡迎使用 AI 守護助手</h3>
+      <p id="tutDesc">讓我們花 3 秒鐘了解如何使用這套強大的防騙工具，保障您的上網安全！</p>
+      <button class="btn btn-primary" onclick="nextTutorialStep()" id="tutBtn">我明白了，開始導覽</button>
+    </div>
+  </div>
+
+
+  <!-- 遊戲對決與賽果介面 (Modal) -->
+  <div class="game-overlay" id="gameOverlay">
+    <div class="countdown-screen" id="countdownScreen">
+      <div style="font-size: 22px; margin-bottom: 10px;">準備對決！</div>
+      <div class="countdown-number" id="countdownNum">3</div>
+    </div>
+
+    <div class="game-header">
+      <div>
+        <div id="gameUserName" style="font-size: 13px; font-weight: bold;">老友記</div>
+        <div style="font-size: 11px; color: #00805A;">分數: <span id="userScore">0</span></div>
+      </div>
+      <div style="font-weight: bold; font-size: 15px; color: #D9381E;" id="roundIndicator">第 1 / 3 題</div>
+      <div style="text-align: right;">
+        <div id="opponentName" style="font-size: 13px; font-weight: bold;">張伯伯</div>
+        <div style="font-size: 11px; color: #D9381E;">分數: <span id="oppScore">0</span></div>
+      </div>
+    </div>
+
+    <div class="game-screen" id="gameScreenContainer">
+      <div class="popup-msg" id="popupMsg">+1 分 🎉</div>
+      
+      <div class="video-container" id="videoWrapper"></div>
+      
+      <div id="questionArea">
+        <p style="font-size: 15px; font-weight: bold; margin-bottom: 8px; color: #333; text-align: center;">請問這段影片是真人還是 AI 生成的？</p>
+        <div class="game-options">
+          <button class="opt-btn btn-ai-choice" onclick="submitAnswer('AI')">🤖 AI 生成</button>
+          <button class="opt-btn btn-real-choice" onclick="submitAnswer('REAL')">👤 真人拍攝</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 三星風格底部導覽列 -->
+  <div class="samsung-navbar">
+    <button class="nav-btn" onclick="goHome()" title="返回首頁">◀</button>
+    <button class="nav-btn" onclick="goHome()" title="主畫面">🏠</button>
+    <button class="nav-btn" onclick="alert('近期任務清單')" title="最近應用">🔲</button>
+  </div>
+
 
   <script>
+    let isFirstTimeAI = true;
+    let tutStep = 0;
+
+    function switchScreen(pageId) {
+      document.querySelectorAll('.screen-page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function goHome() {
+      document.getElementById('gameOverlay').style.display = 'none';
+      document.getElementById('tutorialOverlay').style.display = 'none';
+      switchScreen('pageHome');
+    }
+
+    function openAIApp() {
+      switchScreen('pageAIApp');
+      if (isFirstTimeAI) startTutorial();
+    }
+
+    function openFacebookApp() {
+      switchScreen('pageFacebook');
+    }
+
+    function startTutorial() {
+      tutStep = 1;
+      document.getElementById('tutorialOverlay').style.display = 'flex';
+      updateTutorialContent();
+    }
+
+    function updateTutorialContent() {
+      const title = document.getElementById('tutTitle');
+      const desc = document.getElementById('tutDesc');
+      const btn = document.getElementById('tutBtn');
+
+      if (tutStep === 1) {
+        title.innerText = "🔍 第一步：辨別 AI 內容";
+        desc.innerHTML = "當您在網上看到可疑內容時，點擊浮動小圓點，選擇第一個 <b>【AI? 辨別】</b> 按鈕，助手即會幫您瞬間識破真偽！";
+      } else if (tutStep === 2) {
+        title.innerText = "🌐 第二步：Google 智能搜尋";
+        desc.innerHTML = "點擊第二個 <b>【搜尋】</b> 按鈕，系統會自動將可疑標題帶入 Google，生成錯誤資訊對比，秒速查證真相！";
+      } else if (tutStep === 3) {
+        title.innerText = "🚨 第三步：一鍵防騙舉報";
+        desc.innerHTML = "點擊第三個 <b>【舉報】</b> 按鈕，即可自動將該詐騙內容回報給防騙中心，保障其他老友記！";
+        btn.innerText = "完成教學，開始體驗！";
+      }
+    }
+
+    function nextTutorialStep() {
+      tutStep++;
+      if (tutStep <= 3) {
+        updateTutorialContent();
+      } else {
+        document.getElementById('tutorialOverlay').style.display = 'none';
+        isFirstTimeAI = false;
+      }
+    }
+
+    function generateReport() {
+      const reportBox = document.getElementById('report-result');
+      reportBox.style.display = (reportBox.style.display === 'block') ? 'none' : 'block';
+      if (reportBox.style.display === 'block') reportBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleLeaderboard() {
+      const box = document.getElementById('leaderboardBox');
+      box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+    }
+
+    let userData = { name: "老友記" };
+    let opponents = ["張伯伯", "何婆婆", "梁叔叔"];
+    let currentOpponent = "張伯伯";
+
+    const allQuestions = [
+      { id: 1, videoSrc: "video1.mp4", correct: "AI" },
+      { id: 2, videoSrc: "video2.mp4", correct: "AI" },
+      { id: 3, videoSrc: "video3.mp4", correct: "AI" },
+      { id: 4, videoSrc: "video4.mp4", correct: "AI" },
+      { id: 5, videoSrc: "video5.mp4", correct: "AI" },
+      { id: 6, videoSrc: "video6.mp4", correct: "AI" }
+    ];
+
+    let activeQuestions = [];
+    let currentQIndex = 0, userScore = 0, oppScore = 0, startTime = 0;
+
+    function startAITest() {
+      currentQIndex = 0; userScore = 0; oppScore = 0;
+      currentOpponent = opponents[Math.floor(Math.random() * opponents.length)];
+      document.getElementById('opponentName').innerText = currentOpponent;
+      document.getElementById('gameUserName').innerText = userData.name;
+      document.getElementById('rankUserName').innerText = userData.name;
+
+      let shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+      activeQuestions = shuffled.slice(0, 3);
+      
+      document.getElementById('questionArea').style.display = 'block';
+      document.getElementById('gameOverlay').style.display = 'flex';
+      runCountdown();
+    }
+
+    function runCountdown() {
+      const screen = document.getElementById('countdownScreen');
+      const numElem = document.getElementById('countdownNum');
+      screen.style.display = 'flex';
+      let count = 3;
+      numElem.innerText = count;
+
+      let timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          numElem.innerText = count;
+        } else {
+          clearInterval(timer);
+          screen.style.display = 'none';
+          startTime = Date.now();
+          loadQuestion();
+        }
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      if (currentQIndex >= activeQuestions.length) {
+        showGameOver();
+        return;
+      }
+      document.getElementById('roundIndicator').innerText = `第 ${currentQIndex + 1} / ${activeQuestions.length} 題`;
+      const q = activeQuestions[currentQIndex];
+      document.getElementById('videoWrapper').innerHTML = `
+        <video src="${q.videoSrc}" autoplay controls playsinline muted style="width:100%; height:100%; object-fit:contain;" onerror="this.outerHTML='<div style=\'display:flex;justify-content:center;align-items:center;height:100%;background:#333;color:#fff;font-size:16px;\'>🎬 AI 模擬短片 (本地檔案: ${q.videoSrc})</div>'"></video>
+      `;
+    }
+
+    function submitAnswer(choice) {
+      const q = activeQuestions[currentQIndex];
+      const isCorrect = (choice === q.correct);
+
+      if (isCorrect) {
+        userScore++;
+        document.getElementById('userScore').innerText = userScore;
+        showPopup("+1 分 🎉", "#ff9800");
+      } else {
+        showPopup("❌ 答錯了", "#D9381E");
+      }
+
+      if (Math.random() < 0.8) {
+        oppScore++;
+        document.getElementById('oppScore').innerText = oppScore;
+      }
+
+      currentQIndex++;
+      setTimeout(loadQuestion, 800);
+    }
+
+    function showPopup(text, color) {
+      const popup = document.getElementById('popupMsg');
+      popup.innerText = text;
+      popup.style.color = color;
+      popup.classList.add('show');
+      setTimeout(() => popup.classList.remove('show'), 700);
+    }
+
+    function showGameOver() {
+      document.getElementById('roundIndicator').innerText = "對決結算";
+      document.getElementById('videoWrapper').innerHTML = "";
+      document.getElementById('videoWrapper').style.height = "0px";
+      document.getElementById('questionArea').style.display = 'none';
+
+      const gameScreen = document.getElementById('gameScreenContainer');
+      
+      let resultDiv = document.getElementById('gameOverResultDiv');
+      if (!resultDiv) {
+        resultDiv = document.createElement('div');
+        resultDiv.id = 'gameOverResultDiv';
+        gameScreen.appendChild(resultDiv);
+      }
+
+      resultDiv.innerHTML = `
+        <div style="text-align: center; padding: 10px 0;">
+          <h3 style="color: #005A9C; font-size: 22px; margin-bottom: 10px;">🎉 挑戰完成！</h3>
+          <p style="font-size: 17px; margin-bottom: 6px;">您的得分：<b>${userScore} / ${activeQuestions.length}</b></p>
+          <p style="font-size: 16px; color: #555; margin-bottom: 6px;">對手（${currentOpponent}）得分：<b>${oppScore} 分</b></p>
+          <p style="font-size: 16px; color: #555; margin-bottom: 20px;">答題命中率：<b>${Math.round((userScore/activeQuestions.length)*100)}%</b></p>
+          
+          <button class="btn btn-primary" onclick="exitGame()">🏠 返回 AI 主頁</button>
+          <button class="btn btn-game" onclick="startAITest()" style="margin-top: 10px;">🔄 再來一局</button>
+        </div>
+      `;
+    }
+
+    function exitGame() {
+      document.getElementById('gameOverlay').style.display = 'none';
+      document.getElementById('videoWrapper').style.height = "220px";
+      const resDiv = document.getElementById('gameOverResultDiv');
+      if (resDiv) resDiv.innerHTML = "";
+    }
+
     function openMenu(event) { event.stopPropagation(); document.getElementById('menuOverlay').classList.add('active'); }
     function closeMenu(event) { if (event.target.id === 'menuOverlay') document.getElementById('menuOverlay').classList.remove('active'); }
+    
     function checkAIContent(event) {
       event.stopPropagation();
       document.getElementById('menuOverlay').classList.remove('active');
-      alert('⚠️ ⚠️ 助手檢測：整篇長文中包含 AI 生成的虛假派錢詐騙標題！');
+      alert('⚠️ 助手檢測：這是一則假冒政府派發 $5,000 醫療生活津貼的 AI 詐騙貼文！');
     }
     function searchWithGoogle(event) {
       event.stopPropagation();
@@ -360,32 +686,48 @@
     function reportContent(event) {
       event.stopPropagation();
       document.getElementById('menuOverlay').classList.remove('active');
-      alert('🛡️ 舉報成功！感謝您協助維護網絡安全。');
+      alert('🛡️ 舉報成功！已自動通報網絡安全中心。');
     }
 
-    function triggerShareCheck(event) { event.stopPropagation(); document.getElementById('shareModal').style.display = 'flex'; }
+    // 點擊分享鍵後的連動邏輯：小圓點變紅 + 彈出 AI 報告通知
+    function triggerShareCheck(event) {
+      event.stopPropagation();
+      
+      // 1. 將右側懸浮小圓點改為紅色警示狀態
+      const ball = document.getElementById('floatingBall');
+      ball.classList.add('alert-red');
+
+      // 2. 彈出 AI 助手橫幅通知
+      const banner = document.getElementById('aiBannerNotification');
+      banner.classList.add('show');
+
+      // 3. 同時開啟原本的分享風險攔截彈窗
+      document.getElementById('shareModal').style.display = 'flex';
+    }
+
+    function closeAiBanner() {
+      document.getElementById('aiBannerNotification').classList.remove('show');
+    }
+
     function cancelShare() { document.getElementById('shareModal').style.display = 'none'; }
     function confirmShare() { document.getElementById('shareModal').style.display = 'none'; alert('已完成分享。'); }
 
-    function handleTextSelection() {
-      const selectedText = window.getSelection().toString().trim();
+    document.getElementById('selectable-article').addEventListener('mouseup', handleSelection);
+    document.getElementById('selectable-article').addEventListener('touchend', () => setTimeout(handleSelection, 300));
+
+    function handleSelection() {
+      const selected = window.getSelection().toString().trim();
       const pluginBar = document.getElementById('keyboardPlugin');
       const pluginMsg = document.getElementById('pluginMessage');
-
-      if (selectedText.length > 2) {
-        if (selectedText.includes("5,000 元醫療生活津貼") || selectedText.includes("各位老友記注意")) {
-          pluginMsg.innerHTML = `⚠️ <b>偵測到 AI 內容：</b><br>您選取的句子中有部分被標記為 <span class="ai-highlight-text">AI 虛假資訊</span>（冒充政府津貼），請小心查證！`;
+      if (selected.length > 2) {
+        if (selected.includes("5,000") || selected.includes("各位老友記")) {
+          pluginMsg.innerHTML = `⚠️ <b>偵測到高風險 AI 詐騙內容：</b><br><span style="color:#d9381e;">冒充政府派錢，切勿點擊！</span>`;
         } else {
-          pluginMsg.innerHTML = `✅ <b>檢測完成：</b><br>您選取的文字經檢測為正常資訊。`;
+          pluginMsg.innerHTML = `✅ 經檢測為正常資訊。`;
         }
         pluginBar.style.display = 'block';
       }
     }
-
-    document.getElementById('selectable-article').addEventListener('mouseup', handleTextSelection);
-    document.getElementById('selectable-article').addEventListener('touchend', function() {
-      setTimeout(handleTextSelection, 300);
-    });
 
     function closePlugin() {
       document.getElementById('keyboardPlugin').style.display = 'none';
